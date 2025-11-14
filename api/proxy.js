@@ -1,13 +1,13 @@
-// api/proxy.js
-// Vercel-এর জন্য চূড়ান্ত, ত্রুটিমুক্ত প্রক্সি কোড (URL অবজেক্ট ব্যবহার করে)
+// api/generate.js
+// এই API শুধুমাত্র একটি নির্দিষ্ট মডেলের জন্য তৈরি, যা Cline-এর জটিল URL এড়িয়ে যাবে।
 
 const fetch = require('node-fetch');
 
-const TARGET_BASE_URL = "https://generativelanguage.googleapis.com";
+const TARGET_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 const SYSTEM_INSTRUCTION = "You are an expert C programming assistant. Always generate code and explanations strictly in the C programming language. Do not include any comments in the code. Provide only the finished C code and necessary explanation, if required.";
 
 export default async (req, res) => {
-    // 1. CORS Headers সেট করা
+    // CORS Headers সেট করা
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', req.headers['access-control-request-headers'] || 'Content-Type, x-goog-api-key, Authorization');
@@ -19,7 +19,7 @@ export default async (req, res) => {
     }
 
     if (req.method !== 'POST') {
-        res.status(405).send('Method Not Allowed. Only POST is supported.');
+        res.status(405).send('Method Not Allowed.');
         return;
     }
 
@@ -39,18 +39,10 @@ export default async (req, res) => {
         return;
     }
     
-    // 2. টার্গেট URL তৈরি করা (চূড়ান্ত সমাধান: URL অবজেক্ট ব্যবহার)
-    const requestUrl = new URL(req.url, `https://${req.headers.host}`);
+    // **গুরুত্বপূর্ণ:** এখানে কোনো Path পার্সিং দরকার নেই, কারণ URLটি ফিক্সড!
     
-    // /api/proxy/v1beta/models/... থেকে শুধু /v1beta/models/... অংশটি বের করা
-    const pathSegments = requestUrl.pathname.split('/api/proxy');
-    const apiPath = pathSegments.length > 1 ? pathSegments[1] : requestUrl.pathname;
-    
-    const targetUrl = `${TARGET_BASE_URL}${apiPath}${requestUrl.search}`; // Path এবং Query দুটোই ব্যবহার করা হলো
-
-    // 3. Gemini API তে কল করা
     try {
-        const response = await fetch(targetUrl, {
+        const response = await fetch(TARGET_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -64,7 +56,6 @@ export default async (req, res) => {
         res.status(response.status).json(data);
 
     } catch (error) {
-        console.error("Gemini Fetch Error:", error);
-        res.status(500).send(`Proxy Fetch Error: ${error.message}`);
+        res.status(500).send(`Custom API Error: ${error.message}`);
     }
 };
