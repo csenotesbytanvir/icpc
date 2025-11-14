@@ -1,5 +1,5 @@
 {
-  "name": "gemini-proxy-vercel",
+  "name": "gemini-custom-api",
   "version": "1.0.0",
   "dependencies": {
     "node-fetch": "^3.3.2"
